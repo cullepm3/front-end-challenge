@@ -10,24 +10,21 @@ function domobj(){
         }
     });
   }
-    
+
   self.updateproducthtml = function(){
     for( i=0; i< self.products.length ; i++){
       self.products[i].updatehtml();
     }
   }
-  
+
   self.updatedom = function(){
-    var i=0
     thishtml='';
-    for( i=0; i< self.products.length ; i++){
-      if (i % 3 == 0 ){  thishtml += "<div class='row'>"; console.log("START") }
+    for( var i=0; i< self.products.length ; i++){
       thishtml += self.products[i].htmlview;
-      if ((i % 3 == 2) || i == (self.products.length-1) ){thishtml += "</div>";console.log("FINISH")}
     }
     $("#content").append(thishtml)
+    $('.loading').remove();
   }
-  
 }
 
 function productobj(product, i){
@@ -36,13 +33,20 @@ function productobj(product, i){
   self.title        = product.name
   self.tagline      = product.tagline
   self.url          = product.url
+  self.description  = product.description
   self.htmlview     = ""
   self.index        = i
   self.custom_class = "col"+ ((i % 3) +1)
-  
+
   self.updatehtml= function(){
     $.get('product-template.html', function(template){
-      self.htmlview = template.replace('{image}', self.photo).replace('{title}', self.title).replace('{tagline}', self.tagline).replace('{url}', self.url).replace('{custom_class}', self.custom_class);
+      self.htmlview = template.
+        replace('{image}', self.photo).
+        replace('{title}', self.title).
+        replace('{tagline}', self.tagline).
+        replace('{description}', self.description).
+        replace('{url}', self.url).
+        replace('{custom_class}', self.custom_class);
     });
   }
 }
@@ -52,3 +56,10 @@ var page=new domobj();
 page.getproducts('data.json');
 setTimeout("console.log('building html');page.updateproducthtml();",20);
 setTimeout("page.updatedom()",50)
+
+$(document).ready(function() {
+  $('#content').on('click', '.dismiss', function(event) {
+    event.preventDefault();
+    $(this).closest('.product-container').fadeOut(300, function() {$this.remove()});
+  })
+});

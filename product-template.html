@@ -1,6 +1,13 @@
 <div class="product-container {custom_class}">
   <a href="{url}">
-    <img src="{image}">
+    <div class='image-container'>
+      <img src="{image}">
+
+      <div class="product-overlay">
+        <div class="dismiss">X</div>
+        {description}
+      </div>
+    </div>
     <div class="description">
       <div class="title">{title}</div>
       <div class="tagline">{tagline}</div>
