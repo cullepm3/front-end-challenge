@@ -1,65 +1,89 @@
 
-function domobj(){
-  var self        =this;
-  self.products   = [];
+function Page(){
+  var self = this;
+  self.products   = null;
+  self.productTemplate = null;
+  self.rendered = false;
+
+  self.init = function(url) {
+    self.getproducts(url);
+    self.getTemplate();
+  }
+
+  self.isLoaded = function(url) {
+    return self.products && self.productTemplate ? true: false;
+  }
 
   self.getproducts = function(url){
+    self.products = []
     $.getJSON(url, function(response){
         for(i=0; i<response.sales.length ; i++){
-          self.products.push( new productobj(response.sales[i], i)  );
+          self.products.push( new Product(response.sales[i], i)  );
         }
     });
   }
 
-  self.updateproducthtml = function(){
+  self.getTemplate = function(url) {
+    $.get('product-template.html', function(template){
+      self.productTemplate = template
+    });
+  }
+
+  self.updateDOM = function(){
+    var i=0
+    thishtml='';
     for( i=0; i< self.products.length ; i++){
-      self.products[i].updatehtml();
+      thishtml += self.products[i].toHTML(self.productTemplate);
+    }
+    $("#content").append(thishtml)
+    self.hideLoading();
+  }
+
+  self.render = function(){
+    console.log("page.isLoaded(), loaded?" + page.isLoaded());
+    if (page.isLoaded() && !page.rendered) {
+      page.updateDOM();
+      page.rendered = true;
     }
   }
 
-  self.updatedom = function(){
-    thishtml='';
-    for( var i=0; i< self.products.length ; i++){
-      thishtml += self.products[i].htmlview;
-    }
-    $("#content").append(thishtml)
+  self.hideLoading = function() {
     $('.loading').remove();
   }
 }
 
-function productobj(product, i){
+function Product(product, i, template){
   var self          = this;
   self.photo        = product.photos.medium_half
   self.title        = product.name
   self.tagline      = product.tagline
   self.url          = product.url
-  self.description  = product.description
-  self.htmlview     = ""
   self.index        = i
-  self.custom_class = "col"+ ((i % 3) +1)
+  self.description = product.description
 
-  self.updatehtml= function(){
-    $.get('product-template.html', function(template){
-      self.htmlview = template.
-        replace('{image}', self.photo).
-        replace('{title}', self.title).
-        replace('{tagline}', self.tagline).
-        replace('{description}', self.description).
-        replace('{url}', self.url).
-        replace('{custom_class}', self.custom_class);
-    });
+  self.toHTML= function(template){
+    return template.
+      replace('{image}', self.photo).
+      replace('{title}', self.title).
+      replace('{tagline}', self.tagline).
+      replace('{description}', self.description).
+      replace('{url}', self.url).
+      replace('{custom_class}', self.custom_class);
   }
 }
 
+page=new Page();
 
-var page=new domobj();
-page.getproducts('data.json');
-setTimeout("console.log('building html');page.updateproducthtml();",20);
-setTimeout("page.updatedom()",50)
+$(document).ajaxComplete(function() {
+  page.render();
+});
+setTimeout("page.render()",50)
+
+page.init('data.json');
 
 $(document).ready(function() {
   $('#content').on('click', '.dismiss', function(event) {
     event.preventDefault();
-    $(this).closest('.product-container').fadeOut(300, function() {$this.remove()});
+    $(this).closest('.product-container').remove();
   })
 });
